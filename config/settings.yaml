@@ -1,0 +1,9 @@
+symbols:
+  - BTC/USDT
+  - ETH/USDT
+
+logging:
+  enabled: true
+  file_path: logs/signals.log
+  utf8: true
+  emoji: true  # turn this to false to disable emoji
