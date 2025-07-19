@@ -4,6 +4,7 @@ import pandas as pd
 from utils.indicators import MACD_SETS, compute_macd
 from utils.bootstrap_manager import load_or_fetch_bootstrap
 from utils.historical_loader import fetch_historical_ohlcv
+from utils.state_cache import load_state, save_state
 from datetime import datetime
 
 class MACDEngine:
@@ -20,6 +21,16 @@ class MACDEngine:
             print(f"❌ Failed to bootstrap {symbol}: {e}")
             self.df_bootstrap = pd.DataFrame()
             self.bootstrap_loaded = False
+
+        # Load previous state if available
+        self.state = load_state(self.symbol) or {
+            "last_timestamp": None,
+            "last_macd_score": 0,
+            "last_layer_flags": [0]*7,
+            "last_signal_flag": None,
+            "last_histogram_direction": None
+        }
+        print(f"🧠 Restored state for {self.symbol}: {self.state}")
 
     def fetch_ohlcv(self):
         # 🔁 Fetch fresh OHLCV data on every loop
@@ -42,6 +53,7 @@ class MACDEngine:
                 return None
 
             latest_signals = {}
+            histograms = []
 
             for macd_set in MACD_SETS:
                 macd = compute_macd(df, macd_set["fast"], macd_set["slow"], macd_set["signal"])
@@ -49,6 +61,7 @@ class MACDEngine:
 
                 prev_hist = recent_macd['histogram'].iloc[0]
                 curr_hist = recent_macd['histogram'].iloc[1]
+                histograms.append((prev_hist, curr_hist))
 
                 if prev_hist < 0 and curr_hist > 0:
                     signal = +1
@@ -60,6 +73,27 @@ class MACDEngine:
                 latest_signals[macd_set["label"]] = signal
 
             score = sum(latest_signals.values())
+
+            # Determine histogram direction (based on first MACD layer)
+            prev_hist, curr_hist = histograms[0]
+            hist_diff = curr_hist - prev_hist
+            hist_direction = "rising" if hist_diff > 0 else "falling" if hist_diff < 0 else "flat"
+
+            # Signal flag logic (simple version)
+            if score >= 3:
+                signal_flag = "buy"
+            elif score <= -3:
+                signal_flag = "sell"
+            else:
+                signal_flag = None
+
+            # Update and save state
+            self.state["last_timestamp"] = df["timestamp"].iloc[-1].strftime("%Y-%m-%dT%H:%M:%SZ")
+            self.state["last_macd_score"] = score
+            self.state["last_layer_flags"] = list(latest_signals.values())
+            self.state["last_signal_flag"] = signal_flag
+            self.state["last_histogram_direction"] = hist_direction
+            save_state(self.symbol, self.state)
 
             signal_object = {
                 "timestamp": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S"),
