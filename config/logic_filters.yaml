@@ -1,7 +1,3 @@
-buy_logic:
-  - "Score >= 3 and L1 == 1 and L2 == 1"
-  - "L1 == 1 and prev_L1 == -1 and histogram > prev_histogram"
-
-sell_logic:
-  - "Score <= -3 and L1 == -1"
-  - "L1 == -1 and prev_L1 == 1 and histogram < prev_histogram"
+filter_logic:
+  - score >= 3 and L1 == 1 and L2 == 1
+  - L5 == -1 and score <= -3
