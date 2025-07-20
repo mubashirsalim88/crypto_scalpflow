@@ -4,10 +4,12 @@ import os
 import yaml
 import requests
 from datetime import datetime
+from utils.paper_trader import PaperTrader  # ✅ NEW
 
 class ActionRouter:
     def __init__(self, config_path="config/action_routes.yaml"):
         self.routes = self.load_routes(config_path)
+        self.paper_trader = PaperTrader()  # ✅ NEW
 
     def load_routes(self, path):
         if not os.path.exists(path):
@@ -55,7 +57,6 @@ class ActionRouter:
     # === HANDLER 3 ===
     def send_telegram_alert(self, symbol, signal_info):
         try:
-            # Load Telegram config from settings.yaml
             with open("config/settings.yaml", "r") as f:
                 config = yaml.safe_load(f)
 
@@ -71,7 +72,6 @@ class ActionRouter:
                 print("❌ Missing Telegram token or chat_id in config.")
                 return
 
-            # Format message
             score = signal_info["score"]
             action = signal_info.get("action", "UNKNOWN")
             layers = signal_info["signals"]
@@ -84,7 +84,6 @@ class ActionRouter:
                 f"{layer_str}"
             )
 
-            # Send via Telegram Bot API
             url = f"https://api.telegram.org/bot{token}/sendMessage"
             payload = {
                 "chat_id": chat_id,
@@ -98,3 +97,12 @@ class ActionRouter:
 
         except Exception as e:
             print(f"❌ Error sending Telegram alert: {e}")
+
+    # === HANDLER 4 === ✅ NEW
+    def simulate_order(self, symbol, signal_info):
+        price = signal_info.get("price") or signal_info.get("close_price") or 0.0
+        action = signal_info.get("action")
+        if not price or not action:
+            print("⚠️ Missing price or action for simulated order.")
+            return
+        self.paper_trader.process_signal(symbol, action, price)

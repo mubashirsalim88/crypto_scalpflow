@@ -95,7 +95,8 @@ if __name__ == "__main__":
                                 "symbol": symbol,
                                 "score": score,
                                 "signals": signals,
-                                "action": action
+                                "action": action,
+                                "price": engine.df_bootstrap["close"].iloc[-1]
                             }
                             action_router.dispatch(action, symbol, signal_info)
 

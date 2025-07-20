@@ -7,3 +7,7 @@ SELL:
   - print_to_console
   - save_to_csv
   - send_telegram_alert
+
+action_routes:
+  BUY: [simulate_order]
+  SELL: [simulate_order]
