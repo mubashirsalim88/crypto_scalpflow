@@ -99,7 +99,8 @@ class MACDEngine:
                 "timestamp": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S"),
                 "symbol": self.symbol,
                 "score": score,
-                "signals": latest_signals
+                "signals": latest_signals,
+                "histogram": curr_hist  # ✅ Add this
             }
 
             return signal_object

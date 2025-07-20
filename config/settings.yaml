@@ -7,3 +7,9 @@ logging:
   file_path: logs/signals.log
   utf8: true
   emoji: true  # turn this to false to disable emoji
+
+telegram:
+  enabled: true
+  token: "7861899160:AAEswG4j18U1sp_9hTDhI5NYru32T5mRWxk"
+  chat_id: 1714632496  # Replace with the actual chat_id from getUpdates response
+
